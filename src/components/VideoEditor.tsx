@@ -3,6 +3,7 @@ import { Sidebar } from "./Sidebar";
 import { VideoPreview } from "./VideoPreview";
 import { CaptionEditor } from "./CaptionEditor";
 import { Header } from "./Header";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Caption {
   id: string;
@@ -31,6 +32,8 @@ export const VideoEditor = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedCaption, setSelectedCaption] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
   const addCaption = () => {
     const newCaption: Caption = {
@@ -63,9 +66,71 @@ export const VideoEditor = () => {
     }
   };
 
+  const generateReels = async () => {
+    if (!selectedVideo || captions.length === 0) {
+      toast({
+        title: "Missing Requirements",
+        description: "Please upload a video and add captions before generating reels.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      // Prepare data for backend processing
+      const reelData = {
+        video: {
+          name: selectedVideo.name,
+          duration: selectedVideo.duration,
+        },
+        captions: captions.map(caption => ({
+          text: caption.text,
+          startTime: caption.startTime,
+          endTime: caption.endTime,
+          x: caption.x,
+          y: caption.y,
+          fontSize: caption.fontSize,
+          color: caption.color,
+          backgroundColor: caption.backgroundColor,
+          fontWeight: caption.fontWeight,
+          textAlign: caption.textAlign,
+        })),
+      };
+
+      // TODO: Send to backend for processing with ffmpeg
+      // const response = await fetch('/api/generate-reels', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(reelData),
+      // });
+
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      toast({
+        title: "Reels Generated Successfully!",
+        description: `Generated ${captions.length} reels with captions. Ready for download.`,
+      });
+
+      console.log("Reel generation data:", reelData);
+      
+    } catch (error) {
+      toast({
+        title: "Generation Failed",
+        description: "There was an error generating your reels. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Reel generation error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Header />
+      <Header onGenerateReels={generateReels} isGenerating={isGenerating} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           selectedVideo={selectedVideo}
@@ -76,6 +141,8 @@ export const VideoEditor = () => {
           selectedCaption={selectedCaption}
           setSelectedCaption={setSelectedCaption}
           onDeleteCaption={deleteCaption}
+          onGenerateReels={generateReels}
+          isGenerating={isGenerating}
         />
         
         <div className="flex-1 flex flex-col">

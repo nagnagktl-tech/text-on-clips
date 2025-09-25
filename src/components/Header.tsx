@@ -1,7 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Play, Download, Upload, FileText } from "lucide-react";
+import { Play, Download, Upload, FileText, Loader2 } from "lucide-react";
 
-export const Header = () => {
+interface HeaderProps {
+  onGenerateReels: () => void;
+  isGenerating: boolean;
+}
+
+export const Header = ({ onGenerateReels, isGenerating }: HeaderProps) => {
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
@@ -22,9 +27,17 @@ export const Header = () => {
           <Upload className="w-4 h-4" />
           Upload Video
         </Button>
-        <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
-          <Download className="w-4 h-4" />
-          Generate Reels
+        <Button 
+          onClick={onGenerateReels}
+          disabled={isGenerating}
+          className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+        >
+          {isGenerating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {isGenerating ? "Generating..." : "Generate Reels"}
         </Button>
       </div>
     </header>

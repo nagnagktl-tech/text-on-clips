@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Upload, FileText, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Upload, FileText, Trash2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { VideoFile, Caption } from "./VideoEditor";
 import { CSVImportModal } from "./CSVImportModal";
 
@@ -15,6 +15,8 @@ interface SidebarProps {
   selectedCaption: string | null;
   setSelectedCaption: (id: string | null) => void;
   onDeleteCaption: (id: string) => void;
+  onGenerateReels: () => void;
+  isGenerating: boolean;
 }
 
 export const Sidebar = ({
@@ -26,6 +28,8 @@ export const Sidebar = ({
   selectedCaption,
   setSelectedCaption,
   onDeleteCaption,
+  onGenerateReels,
+  isGenerating,
 }: SidebarProps) => {
   const [showCSVModal, setShowCSVModal] = useState(false);
 
@@ -157,8 +161,19 @@ export const Sidebar = ({
             </div>
           </div>
           
-          <Button className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90">
-            Generate All Reels
+          <Button 
+            onClick={onGenerateReels}
+            disabled={isGenerating}
+            className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Generating...
+              </>
+            ) : (
+              "Generate All Reels"
+            )}
           </Button>
         </div>
       </div>
