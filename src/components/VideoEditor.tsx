@@ -84,84 +84,54 @@ export const VideoEditor = () => {
         description: `Processing ${captions.length} reels with captions...`,
       });
 
-      // Create downloadable files for each caption
-      for (let i = 0; i < captions.length; i++) {
-        const caption = captions[i];
-        
-        // Create reel data for this caption
-        const reelData = {
-          originalVideo: selectedVideo.name,
-          reelNumber: i + 1,
-          caption: {
+      // Call backend API to generate actual MP4 files
+      const response = await fetch('http://localhost:3001/api/generate-reels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoFilename: selectedVideo.name,
+          captions: captions.map(caption => ({
             text: caption.text,
             startTime: caption.startTime,
             endTime: caption.endTime,
-            position: { x: caption.x, y: caption.y },
-            style: {
-              fontSize: caption.fontSize,
-              color: caption.color,
-              backgroundColor: caption.backgroundColor,
-              fontWeight: caption.fontWeight,
-              textAlign: caption.textAlign,
-            }
-          },
-          outputSettings: {
-            resolution: "1080x1920",
-            format: "mp4",
-            quality: "high"
-          },
-          processingInstructions: {
-            videoInput: selectedVideo.name,
-            captionOverlay: `Text: "${caption.text}" at position (${caption.x}%, ${caption.y}%) from ${caption.startTime}s to ${caption.endTime}s`,
-            ffmpegCommand: `ffmpeg -i "${selectedVideo.name}" -vf "drawtext=text='${caption.text}':fontsize=${caption.fontSize}:fontcolor=${caption.color}:x=${caption.x}*w/100:y=${caption.y}*h/100:enable='between(t,${caption.startTime},${caption.endTime})'" -c:a copy "reel_${i + 1}.mp4"`
-          }
-        };
+            x: caption.x,
+            y: caption.y,
+            fontSize: caption.fontSize,
+            color: caption.color,
+            backgroundColor: caption.backgroundColor,
+            fontWeight: caption.fontWeight,
+            textAlign: caption.textAlign,
+          }))
+        }),
+      });
 
-        // Create and download the reel configuration file
-        const blob = new Blob([JSON.stringify(reelData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Download the batch ZIP file containing all MP4 reels
+        const downloadUrl = `http://localhost:3001${result.downloadUrl}`;
         const link = document.createElement('a');
-        link.href = url;
-        link.download = `reel_${i + 1}_config.json`;
+        link.href = downloadUrl;
+        link.download = `reels_batch_${result.batchId}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
 
-        // Add delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 500));
+        toast({
+          title: "Reels Generated Successfully!",
+          description: `${captions.length} MP4 reels generated and downloaded as ZIP file.`,
+        });
+
+        console.log("Reel generation completed:", result);
+      } else {
+        throw new Error('Backend processing failed');
       }
-
-      // Create a master batch file for processing all reels
-      const batchInstructions = {
-        projectName: "Reel Caption Project",
-        totalReels: captions.length,
-        originalVideo: selectedVideo.name,
-        processingInstructions: "Use the individual reel config files with your ffmpeg backend to generate the actual video files",
-        reels: captions.map((caption, i) => ({
-          reelNumber: i + 1,
-          configFile: `reel_${i + 1}_config.json`,
-          outputFile: `reel_${i + 1}.mp4`,
-          caption: caption.text
-        }))
-      };
-
-      const batchBlob = new Blob([JSON.stringify(batchInstructions, null, 2)], { type: 'application/json' });
-      const batchUrl = URL.createObjectURL(batchBlob);
-      const batchLink = document.createElement('a');
-      batchLink.href = batchUrl;
-      batchLink.download = 'batch_processing_instructions.json';
-      document.body.appendChild(batchLink);
-      batchLink.click();
-      document.body.removeChild(batchLink);
-      URL.revokeObjectURL(batchUrl);
-
-      toast({
-        title: "Reels Generated & Downloaded!",
-        description: `${captions.length} reel configuration files downloaded to your PC. Use these with your backend to generate the actual videos.`,
-      });
-
-      console.log("Reel generation completed - files downloaded");
       
     } catch (error) {
       toast({
