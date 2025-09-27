@@ -35,25 +35,37 @@ export const Sidebar = ({
 
   const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    console.log("File selected:", file);
+    
     if (file && file.type.startsWith('video/')) {
+      console.log("Valid video file detected:", file.type);
       const url = URL.createObjectURL(file);
+      console.log("Video URL created:", url);
       
       // Create a temporary video element to get duration
       const tempVideo = document.createElement('video');
       tempVideo.preload = 'metadata';
       
       tempVideo.onloadedmetadata = () => {
+        console.log("Video metadata loaded, duration:", tempVideo.duration);
         const video: VideoFile = {
           file,
           url,
           duration: tempVideo.duration,
           name: file.name,
         };
+        console.log("Setting video state:", video);
         setSelectedVideo(video);
         URL.revokeObjectURL(tempVideo.src); // Clean up temporary URL
       };
+
+      tempVideo.onerror = (error) => {
+        console.error("Video loading error:", error);
+      };
       
       tempVideo.src = url;
+    } else {
+      console.log("Invalid file type or no file selected");
     }
   };
 

@@ -124,7 +124,10 @@ export const VideoPreview = ({
     setIsDragging(false);
   };
 
+  console.log("VideoPreview render - video:", video);
+
   if (!video) {
+    console.log("No video selected, showing placeholder");
     return (
       <div className="flex-1 flex items-center justify-center bg-secondary/20">
         <div className="text-center">
