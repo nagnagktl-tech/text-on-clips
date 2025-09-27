@@ -37,13 +37,23 @@ export const Sidebar = ({
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('video/')) {
       const url = URL.createObjectURL(file);
-      const video: VideoFile = {
-        file,
-        url,
-        duration: 0, // Will be set when video loads
-        name: file.name,
+      
+      // Create a temporary video element to get duration
+      const tempVideo = document.createElement('video');
+      tempVideo.preload = 'metadata';
+      
+      tempVideo.onloadedmetadata = () => {
+        const video: VideoFile = {
+          file,
+          url,
+          duration: tempVideo.duration,
+          name: file.name,
+        };
+        setSelectedVideo(video);
+        URL.revokeObjectURL(tempVideo.src); // Clean up temporary URL
       };
-      setSelectedVideo(video);
+      
+      tempVideo.src = url;
     }
   };
 
