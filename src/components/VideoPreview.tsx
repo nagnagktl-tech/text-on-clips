@@ -158,6 +158,8 @@ export const VideoPreview = ({
               src={video.url}
               className="w-full h-full object-cover"
               onClick={togglePlayPause}
+              onLoadedMetadata={() => console.log("Video element loaded metadata")}
+              onError={(e) => console.error("Video element error:", e)}
             />
             
             {/* Caption Overlays */}

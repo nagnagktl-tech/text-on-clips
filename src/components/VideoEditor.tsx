@@ -35,6 +35,8 @@ export const VideoEditor = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
+  console.log("VideoEditor render - selectedVideo:", selectedVideo);
+
   const addCaption = () => {
     const newCaption: Caption = {
       id: Math.random().toString(36).substr(2, 9),
